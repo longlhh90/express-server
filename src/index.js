@@ -12,7 +12,7 @@ const app = express();
 
 // defining database 
 const { startDatabase, getDatabase } = require('./database/db_mongo');
-const { insertUser, getListUsers } = require('./database/user');
+const { insertUser, getListUsers, getUser } = require('./database/user');
 
 // start the in-memory MongoDB instance
 startDatabase().then(async () => {
@@ -34,6 +34,20 @@ app.use(morgan('combined'));
 
 // defining endpoints
 app.get('/users/', (req, res) => {
+    email = req.query.email
+    if (email) {
+        filter = {
+            email: email
+        }
+    } else {
+        filter = {}
+    }
+    getDatabase().then(
+        async () => {
+            res.send(await getListUsers(filter));
+        });
+});
+
     getDatabase().then(
         async () => {
             res.send(await getListUsers());
@@ -45,7 +59,7 @@ app.post('/users/', (req, res) => {
         const neededKeys = ['email', 'password'];
         const user_info = req.body;
         if (!neededKeys.every(key => Object.keys(user_info).includes(key))) {
-            throw new Error(`missing keys in body request: ${neededKeys}`)
+            throw new Error(`Missing keys in body request: ${neededKeys}`)
         };
 
         getDatabase().then(
