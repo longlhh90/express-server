@@ -48,9 +48,11 @@ app.get('/users/', (req, res) => {
         });
 });
 
+app.get('/users/:user_id/', (req, res) => {
+    uid = req.params.user_id
     getDatabase().then(
         async () => {
-            res.send(await getListUsers());
+            res.send(await getUser(uid));
         });
 });
 
