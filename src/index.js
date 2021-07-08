@@ -12,9 +12,6 @@ const { startDatabase } = require('./database/db_mongo');
 // defining the Express app
 const app = express();
 
-// defining database 
-const { startDatabase, getDatabase } = require('./database/db_mongo');
-const { insertUser, getListUsers, getUser } = require('./database/user');
 
 // start the in-memory MongoDB instance
 startDatabase().then(async () => {
@@ -39,48 +36,29 @@ dotenv.config();
 
 // access config var
 const APP_PORT = process.env.APP_PORT;
+
+// TODO: move to routes/urls
 // defining endpoints
-app.get('/users/', (req, res) => {
-    email = req.query.email
-    if (email) {
-        filter = {
-            email: email
-        }
-    } else {
-        filter = {}
-    }
-    getDatabase().then(
-        async () => {
-            res.send(await getListUsers(filter));
-        });
+var usersRouter = require('./routes/users.routes');
+
+app.use('/users', usersRouter);
+
+
+// TODO: move them to middleware
+// catch 404 and forward to error handler
+app.use(function (req, res, next) {
+    res.status(err.status || 404).json({
+        message: "No such route exists"
+    })
 });
 
-app.get('/users/:user_id/', (req, res) => {
-    uid = req.params.user_id
-    getDatabase().then(
-        async () => {
-            res.send(await getUser(uid));
-        });
+// error handler
+app.use(function (err, req, res, next) {
+    res.status(err.status || 500).json({
+        message: "Error Message"
+    })
 });
 
-app.post('/users/', (req, res) => {
-    try {
-        const neededKeys = ['email', 'password'];
-        const user_info = req.body;
-        if (!neededKeys.every(key => Object.keys(user_info).includes(key))) {
-            throw new Error(`Missing keys in body request: ${neededKeys}`)
-        };
-
-        getDatabase().then(
-            async () => {
-                res.send(await insertUser(user_info));
-            }
-        )
-    }
-    catch (err) {
-        res.status(400).send('Something broke! ' + err.message)
-    }
-})
 
 // starting the server
 app.listen(APP_PORT, async () => {
