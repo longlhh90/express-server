@@ -1,11 +1,13 @@
-const APP_PORT = 8080
-
 // importing the dependencies
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const dotenv = require('dotenv');
+
+// defining database 
+const { startDatabase } = require('./database/db_mongo');
 
 // defining the Express app
 const app = express();
@@ -32,6 +34,11 @@ app.use(cors());
 // adding morgan to log HTTP requests
 app.use(morgan('combined'));
 
+// get config vars
+dotenv.config();
+
+// access config var
+const APP_PORT = process.env.APP_PORT;
 // defining endpoints
 app.get('/users/', (req, res) => {
     email = req.query.email
