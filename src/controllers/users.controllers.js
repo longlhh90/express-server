@@ -1,7 +1,8 @@
 const { getDatabase } = require('../database/db_mongo');
 const { insertUser, getListUsers, getUser } = require('../database/user');
+const { ValidationError } = require('../middleware/exceptions');
 
-const getListOfUsers = async (req, res) => {
+const getListOfUsers = async (req, res, next) => {
     email = req.query.email
     if (email) {
         filter = {
@@ -10,36 +11,35 @@ const getListOfUsers = async (req, res) => {
     } else {
         filter = {}
     }
-    getDatabase().then(
-        async () => {
-            res.send(await getListUsers(filter));
-        });
+
+    try {
+        res.send(await getListUsers(filter));
+    } catch (err) {
+        next(err)
+    }
 };
 
-const getUserByID = async (req, res) => {
+const getUserByID = async (req, res, next) => {
     uid = req.params.user_id
-    getDatabase().then(
-        async () => {
-            res.send(await getUser(uid));
-        });
+    try {
+        res.send(await getUser(uid));
+    } catch (err) {
+        next(err)
+    }
 };
 
-const createUser = async (req, res) => {
+const createUser = async (req, res, next) => {
     try {
         const neededKeys = ['email', 'password'];
         const user_info = req.body;
         if (!neededKeys.every(key => Object.keys(user_info).includes(key))) {
-            throw new Error(`Missing keys in body request: ${neededKeys}`)
+            throw new ValidationError(`Missing keys in body request: ${neededKeys}`)
         };
 
-        getDatabase().then(
-            async () => {
-                res.send(await insertUser(user_info));
-            }
-        )
+        res.send(await insertUser(user_info));
     }
     catch (err) {
-        res.status(400).send('Something broke! ' + err.message)
+        next(err)
     }
 };
 
